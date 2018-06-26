@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  APIKey:
+    Description: API Key
+    Value:
+      Fn::GetAtt:
+      - AppSyncAPIKey
+      - ApiKey
+  GraphQL:
+    Description: GraphQL URL
+    Value:
+      Fn::GetAtt:
+      - AppSyncAPI
+      - GraphQLUrl
+Parameters:
+  ParamBucketName:
+    Type: String
+  ParamENV:
+    Type: String
+  ParamKeyExpiration:
+    Default: 604800
+    Type: Number
+  ParamProjectName:
+    Type: String
+Resources:
+  AppSyncAPI:
+    Properties:
+      AuthenticationType: API_KEY
+      Name:
+        Fn::Join:
+        - '-'
+        - - Ref: ParamProjectName
+          - Ref: ParamENV
+    Type: AWS::AppSync::GraphQLApi
+  AppSyncAPIKey:
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+        - AppSyncAPI
+        - ApiId
+      Expires:
+        Ref: ParamKeyExpiration
+    Type: AWS::AppSync::ApiKey
+  AppSyncDataSource:
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+        - AppSyncAPI
+        - ApiId
+      DynamoDBConfig:
+        AwsRegion: us-west-2
+        TableName:
+          Ref: PostsTable
+      Name: PostsTable
+      ServiceRoleArn:
+        Fn::GetAtt:
+        - Role
+        - Arn
+      Type: AMAZON_DYNAMODB
+    Type: AWS::AppSync::DataSource
+  AppSyncSchema:
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+        - AppSyncAPI
+        - ApiId
+      DefinitionS3Location:
+        Fn::Join:
+        - ''
+        - - s3://
+          - Ref: ParamBucketName
+          - /schema.graphql
+    Type: AWS::AppSync::GraphQLSchema
+  CreatePostResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+        - AppSyncAPI
+        - ApiId
+      DataSourceName:
+        Fn::GetAtt:
+        - AppSyncDataSource
+        - Name
+      FieldName: createPost
+      RequestMappingTemplate: "{\n  \"version\": \"2017-02-28\",\n  \"operation\"\
+        : \"PutItem\",\n  \"key\": {\n    \"id\": $util.dynamodb.toDynamoDBJson($util.autoId()),\n\
+        \    \"createdAt\": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601())\n\
+        \  },\n  \"attributeValues\": $util.dynamodb.toMapValuesJson($ctx.args.input),\n\
+        \  \"condition\": {\n    \"expression\": \"attribute_not_exists(#id)\",\n\
+        \    \"expressionNames\": {\n      \"#id\": \"id\",\n    },\n  },\n}\n"
+      ResponseMappingTemplate: $util.toJson($ctx.result)
+      TypeName: Mutation
+    Type: AWS::AppSync::Resolver
+  GetPostQuery:
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+        - AppSyncAPI
+        - ApiId
+      DataSourceName:
+        Fn::GetAtt:
+        - AppSyncDataSource
+        - Name
+      FieldName: getPost
+      RequestMappingTemplate: "{\n  \"version\": \"2017-02-28\",\n  \"operation\"\
+        : \"GetItem\",\n  \"key\": {\n    \"id\": $util.dynamodb.toDynamoDBJson($ctx.args.id),\n\
+        \  },\n}\n"
+      ResponseMappingTemplate: $util.toJson($ctx.result)
+      TypeName: Query
+    Type: AWS::AppSync::Resolver
+  IncrementVoteForPostResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+        - AppSyncAPI
+        - ApiId
+      DataSourceName:
+        Fn::GetAtt:
+        - AppSyncDataSource
+        - Name
+      FieldName: incrementVoteForPost
+      RequestMappingTemplate: "{\n  \"version\" : \"2017-02-28\",\n  \"operation\"\
+        \ : \"UpdateItem\",\n  \"key\" : {\n    \"id\" : { \"S\" : \"${ctx.arguments.id}\"\
+        \ }\n  },\n  \"update\" : {\n    \"expression\" : \"ADD votes :incr\",\n \
+        \   \"expressionValues\" : { \":incr\": { \"N\": 1 } }\n  }\n}\n"
+      ResponseMappingTemplate: $util.toJson($ctx.result)
+      TypeName: Mutation
+    Type: AWS::AppSync::Resolver
+  ListPostsQuery:
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+        - AppSyncAPI
+        - ApiId
+      DataSourceName:
+        Fn::GetAtt:
+        - AppSyncDataSource
+        - Name
+      FieldName: listPosts
+      RequestMappingTemplate: "{\n  \"version\": \"2017-02-28\",\n  \"operation\"\
+        : \"Scan\",\n  \"limit\": $util.defaultIfNull($ctx.args.first, 20),\n  \"\
+        nextToken\": $util.toJson($util.defaultIfNullOrEmpty($ctx.args.after, null)),\n\
+        }\n"
+      ResponseMappingTemplate: $util.toJson($ctx.result)
+      TypeName: Query
+    Type: AWS::AppSync::Resolver
+  PostsTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: createdAt
+        AttributeType: S
+      GlobalSecondaryIndexes:
+      - IndexName: id-by-createdAt
+        KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: createdAt
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+    Type: AWS::DynamoDB::Table
+  Role:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: appsync.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+    Type: AWS::IAM::Role
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,9 @@
+mutation postMutation($content: String!) {
+  createPost(input: { content: $content }) {
+    __typename
+    id
+    createdAt
+    content
+    votes
+  }
+}

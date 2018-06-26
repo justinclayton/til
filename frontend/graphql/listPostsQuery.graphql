@@ -1,0 +1,11 @@
+query listPosts {
+  listPosts {
+    items {
+      __typename
+      id
+      content
+      createdAt
+      votes
+    }
+  }
+}

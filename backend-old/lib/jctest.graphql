@@ -1,0 +1,52 @@
+input CreatePostInput {
+  id: ID
+  createdAt: String
+  content: String!
+  votes: Int
+}
+
+input DeletePostInput {
+  id: ID!
+}
+
+type Mutation {
+  incrementVoteForPost(id: ID!): Post
+  createPost(input: CreatePostInput!): Post
+  updatePost(input: UpdatePostInput!): Post
+  deletePost(input: DeletePostInput!): Post
+}
+
+type Post {
+  id: ID!
+  createdAt: String!
+  content: String!
+  votes: Int
+}
+
+type PostConnection {
+  items: [Post]
+  nextToken: String
+}
+
+type Query {
+  posts: [Post]
+  post(id: ID!): Post
+  getPost(id: ID!): Post
+  listPosts(first: Int, after: String): PostConnection
+}
+
+type Subscription {
+  onCreatePost(id: ID, createdAt: String, content: String, votes: Int): Post
+    @aws_subscribe(mutations: ["createPost"])
+  onUpdatePost(id: ID, createdAt: String, content: String, votes: Int): Post
+    @aws_subscribe(mutations: ["updatePost"])
+  onDeletePost(id: ID, createdAt: String, content: String, votes: Int): Post
+    @aws_subscribe(mutations: ["deletePost"])
+}
+
+input UpdatePostInput {
+  id: ID!
+  createdAt: String
+  content: String
+  votes: Int
+}

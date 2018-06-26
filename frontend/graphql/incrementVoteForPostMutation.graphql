@@ -1,0 +1,7 @@
+mutation incrementVoteForPost($id: ID!) {
+  incrementVoteForPost(id: $id) {
+    __typename
+    id
+    votes
+  }
+}
