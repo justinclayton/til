@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
 import POSTS_QUERY from './PostList';
+import '../styles/components.css';
 
 class CreatePost extends Component {
   state = {
@@ -10,7 +11,24 @@ class CreatePost extends Component {
 
   render() {
     return (
-      <div className="position-fixed" />
+      <nav className="create-post">
+        <h1 className="display-6">What did you learn today?</h1>
+        <div className="form-group">
+          <input
+            className="form-control"
+            value={this.state.content}
+            onChange={e => this.setState({ content: e.target.value })}
+            type="text"
+            placeholder="e.g. (I learned to paint)"
+          />
+        </div>
+        <button
+          className="form-control btn btn-primary"
+          onClick={() => this._createPost()}
+        >
+          Submit
+        </button>
+      </nav>
       // <div className="jumbotron">
       //   <div className="row justify-content-center">
       //     <div className="col-6">

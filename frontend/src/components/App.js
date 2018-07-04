@@ -7,21 +7,6 @@ import PostList from './PostList';
 
 // const authToken = localStorage.getItem(AUTH_TOKEN);
 
-const Header = () => {
-  return (
-    <header>
-      <nav className="navbar navbar-dark navbar-expand-md bg-dark">
-        <Link to="/" className="navbar-brand">
-          Home
-        </Link>
-        <Link to="/new" className="navbar-brand">
-          New
-        </Link>
-      </nav>
-    </header>
-  );
-};
-
 class App extends Component {
   state = {
     posts: '',
@@ -29,14 +14,14 @@ class App extends Component {
 
   render() {
     return (
-      <div className="bg-secondary">
-        <main className="container" role="main">
-          <div className="col-xs-3" />
-          <div className="App container-fluid col-xs-6">
-            <CreatePost />
+      <div className="root">
+        <aside>
+          <CreatePost />
+        </aside>
+        <main role="main">
+          <div className="App container-fluid">
             <PostList />
           </div>
-          <div className="col-xs-3" />
         </main>
       </div>
     );

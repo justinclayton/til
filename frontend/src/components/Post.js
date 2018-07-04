@@ -5,18 +5,17 @@ import { graphql } from 'react-apollo';
 class Post extends Component {
   render() {
     return (
-      <div className="row-md-4 p-3">
+      <div className="p-3">
         <div className="card">
           <div className="card-body">
-            <h5 className="card-title">Today I Learned...</h5>
+            <header className="card-header">
+              <span className="card-title">Today I learned...</span>
+            </header>
             <p className="card-text">{this.props.post.content}</p>
             <div className="row">
               <div className="col-sm-3">
-                Votes: <a className="card-link">{this.props.post.votes}</a>
-              </div>
-              <div className="col-sm-3">
-                <a onClick={this._voteForPost} className="card-vote">
-                  +
+                <a onClick={this._voteForPost} className="btn btn-primary card-vote">
+                  {this.props.post.votes}
                 </a>
               </div>
             </div>
