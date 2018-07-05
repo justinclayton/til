@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
-import POSTS_QUERY from './PostList';
 import '../styles/components.css';
+import POSTS_QUERY from './PostList';
 
 class CreatePost extends Component {
   state = {
@@ -29,28 +29,6 @@ class CreatePost extends Component {
           Submit
         </button>
       </nav>
-      // <div className="jumbotron">
-      //   <div className="row justify-content-center">
-      //     <div className="col-6">
-      //       <h1 className="display-4">Today I Learned...</h1>
-      //     </div>
-      //     <div className="col-6">
-      //       <input
-      //         className="form-group"
-      //         value={this.state.content}
-      //         onChange={e => this.setState({ content: e.target.value })}
-      //         type="text"
-      //         placeholder="What have you learned today?"
-      //       />
-      //     </div>
-      //     <button
-      //       className="form-control btn btn-primary"
-      //       onClick={() => this._createPost()}
-      //     >
-      //       Submit
-      //     </button>
-      //   </div>
-      // </div>
     );
   }
 
